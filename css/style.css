@@ -1252,16 +1252,29 @@ header .container {
         min-width: 44px;
     }
 
-    /* Better modal positioning on mobile */
-    .modal-content {
+    /* Better modal positioning on mobile - full screen for checkout */
+    #checkout-modal .modal-content,
+    #upi-payment-modal .modal-content {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        max-height: 95vh;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+        margin: 0;
+        transform: none;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        margin: 0;
+    }
+
+    #checkout-modal .modal-content .modal-content {
+        width: 100%;
+        height: 100%;
+        padding: 20px;
     }
 
     .checkout-form-container {
@@ -1952,6 +1965,7 @@ footer p:first-child::before {
         padding: 20px;
         max-height: 90vh;
         overflow-y: auto;
+        border-radius: 12px;
     }
 
     /* Login Modal Mobile */
@@ -2053,6 +2067,18 @@ footer p:first-child::before {
         grid-template-columns: 1fr;
         gap: 20px;
         margin-bottom: 20px;
+    }
+
+    /* Touch-friendly buttons */
+    button {
+        min-height: 48px;
+        min-width: 48px;
+        font-size: 16px;
+    }
+
+    .step {
+        min-height: 48px;
+        padding: 12px 20px;
     }
 
     .form-group {

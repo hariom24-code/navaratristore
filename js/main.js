@@ -360,27 +360,31 @@ function openUpiApp(upiUrl) {
     try {
         console.log('Opening UPI URL:', upiUrl);
 
-        // Try to open UPI app
-        const upiWindow = window.open(upiUrl, '_blank');
-
-        // Check if popup was blocked
-        if (!upiWindow || upiWindow.closed || typeof upiWindow.closed === 'undefined') {
-            console.warn('UPI popup was blocked or failed to open');
-            showToast('Popup blocked! Click "Show UPI ID" to copy the UPI ID manually.', 'error');
-            return;
-        }
-
-        showToast('Opening UPI app to complete payment...', 'success');
-
-        // Fallback: if UPI app doesn't open within 2 seconds, show manual instructions
-        setTimeout(() => {
-            if (!upiWindow.closed) {
-                // Window is still open, UPI app might be opening
+        // For mobile, try to open directly; for desktop, use popup
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // On mobile, create a link and simulate click for deep link
+            const link = document.createElement('a');
+            link.href = upiUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Redirecting to UPI app...', 'success');
+        } else {
+            // Desktop fallback: popup
+            const upiWindow = window.open(upiUrl, '_blank');
+            if (!upiWindow || upiWindow.closed || typeof upiWindow.closed === 'undefined') {
+                console.warn('UPI popup was blocked or failed to open');
+                showToast('Popup blocked! Click "Show UPI ID" to copy the UPI ID manually.', 'error');
                 return;
             }
-            // Window closed quickly, might indicate UPI app opened
-            console.log('UPI window closed, payment app may have opened');
-        }, 2000);
+            showToast('Opening UPI app to complete payment...', 'success');
+        }
+
+        // Fallback timeout for manual instructions
+        setTimeout(() => {
+            showToast('If UPI app didn\'t open, use manual UPI ID below.', 'info');
+        }, 3000);
 
     } catch (error) {
         console.error('Failed to open UPI app:', error);
