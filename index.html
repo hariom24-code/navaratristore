@@ -1,0 +1,238 @@
+<!-- README: To run locally, simply open index.html in a web browser. For Razorpay testing, use test keys from Razorpay dashboard. Replace RAZORPAY_CONFIG.KEY_ID in js/razorpay-config.js with your actual test/live key. For production, implement server-side order creation to generate real order_id and amount. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#ff6600">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Navratri Store">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Handcrafted Dandiya Sticks - Navratri Store</title>
+    <meta name="description" content="Buy authentic handcrafted Dandiya sticks for Navratri celebrations. Premium quality, decorative designs, and fast delivery.">
+    <meta property="og:title" content="Handcrafted Dandiya Sticks - Navratri Store">
+    <meta property="og:description" content="Buy authentic handcrafted Dandiya sticks for Navratri celebrations. Premium quality, decorative designs, and fast delivery.">
+    <meta property="og:image" content="images/logo.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <img src="images/logo.png" alt="Navratri Store Logo" class="logo">
+            <div class="header-right">
+                <button class="login-btn" onclick="login()">Login</button>
+                <div class="cart-icon" onclick="toggleCart()">
+                    <div class="cart-icon-container">
+                        <span class="cart-emoji">🛒</span>
+                        <span id="cart-count" class="cart-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Handcrafted Dandiya Sticks</h1>
+            <p>Celebrate Navratri with authentic, beautifully crafted Dandiya sticks</p>
+            <button onclick="scrollToProducts()">Shop Now</button>
+        </div>
+    </section>
+
+    <section id="products" class="products">
+        <div class="container">
+            <h2>Our Products</h2>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="images/garba1.avif" alt="Basic Dandiya Sticks - Traditional wooden sticks for Navratri dancing" class="product-image">
+                    <h3>Basic Dandiya</h3>
+                    <p>✨ Simple and sturdy sticks for traditional dancing.</p>
+                    <p class="price">₹<span id="price-basic">99</span></p>
+                    <div class="quantity-selector">
+                        <button onclick="changeQuantity('basic', -1)">-</button>
+                        <span id="qty-basic">1 pair</span>
+                        <button onclick="changeQuantity('basic', 1)">+</button>
+                    </div>
+                    <div class="button-group">
+                        <button onclick="addToCart('basic', 'Basic Dandiya', 99)">🛒 Add to Cart</button>
+                        <button onclick="buyNow('basic', 'Basic Dandiya', 99)" class="buy-now-btn">⚡ Buy Now</button>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="images/dandiya2.webp" alt="Decorative Dandiya Sticks - Colorful ribbons and bells for festive celebration" class="product-image">
+                    <h3>Decorative Dandiya</h3>
+                    <p>🎵 Adorned with colorful ribbons and bells.</p>
+                    <p class="price">₹<span id="price-decorative">149</span></p>
+                    <div class="quantity-selector">
+                        <button onclick="changeQuantity('decorative', -1)">-</button>
+                        <span id="qty-decorative">1 pair</span>
+                        <button onclick="changeQuantity('decorative', 1)">+</button>
+                    </div>
+                    <div class="button-group">
+                        <button onclick="addToCart('decorative', 'Decorative Dandiya', 149)">🛒 Add to Cart</button>
+                        <button onclick="buyNow('decorative', 'Decorative Dandiya', 149)" class="buy-now-btn">⚡ Buy Now</button>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="images/dandiya3.jpg" alt="Premium Painted Dandiya Sticks - Hand-painted with intricate designs" class="product-image">
+                    <h3>Premium Painted Dandiya</h3>
+                    <p>🎨 Hand-painted with intricate designs and premium materials.</p>
+                    <p class="price">₹<span id="price-premium">199</span></p>
+                    <div class="quantity-selector">
+                        <button onclick="changeQuantity('premium', -1)">-</button>
+                        <span id="qty-premium">1 pair</span>
+                        <button onclick="changeQuantity('premium', 1)">+</button>
+                    </div>
+                    <div class="button-group">
+                        <button onclick="addToCart('premium', 'Premium Painted Dandiya', 199)">🛒 Add to Cart</button>
+                        <button onclick="buyNow('premium', 'Premium Painted Dandiya', 199)" class="buy-now-btn">⚡ Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="cart" class="cart">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <button onclick="toggleCart()">Close</button>
+        </div>
+        <div id="cart-items"></div>
+        <div class="cart-footer">
+            <p>Subtotal: ₹<span id="subtotal">0</span></p>
+            <button onclick="openCheckout()">Checkout</button>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCheckout()">&times;</span>
+            <h3>🛒 Checkout</h3>
+
+            <div class="checkout-steps">
+                <div class="step active">
+                    <span class="step-icon">📦</span>
+                    <span>Shipping</span>
+                </div>
+                <div class="step">
+                    <span class="step-icon">💳</span>
+                    <span>Payment</span>
+                </div>
+                <div class="step">
+                    <span class="step-icon">✅</span>
+                    <span>Complete</span>
+                </div>
+            </div>
+
+            <div class="checkout-form-container">
+                <form id="shipping-form">
+                    <div class="form-group">
+                        <label for="name">👤 Full Name</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="name" name="name" placeholder=" " required>
+                            <span class="input-icon">👤</span>
+                            <span class="floating-label">Enter your full name</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">📧 Email Address</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" name="email" placeholder=" " required>
+                            <span class="input-icon">📧</span>
+                            <span class="floating-label">your@email.com</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">📱 Phone Number</label>
+                        <div class="input-wrapper">
+                            <input type="tel" id="phone" name="phone" placeholder=" " required>
+                            <span class="input-icon">📱</span>
+                            <span class="floating-label">+91 9876543210</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="city">🏙️ City</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="city" name="city" placeholder=" " required>
+                            <span class="input-icon">🏙️</span>
+                            <span class="floating-label">Your city</span>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="address">🏠 Delivery Address</label>
+                        <div class="input-wrapper">
+                            <textarea id="address" name="address" placeholder=" " required></textarea>
+                            <span class="input-icon">🏠</span>
+                            <span class="floating-label">Complete delivery address</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="pincode">📮 Pincode</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="pincode" name="pincode" placeholder=" " required>
+                            <span class="input-icon">📮</span>
+                            <span class="floating-label">6-digit pincode</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <h4>📋 Order Summary</h4>
+            <div id="order-summary"></div>
+            <button onclick="payWithRazorpay()">💳 Complete Payment</button>
+        </div>
+    </div>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content login-modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+
+            <div class="login-header">
+                <div class="login-logo">
+                    <img src="images/logo.png" alt="Navratri Store Logo" class="modal-logo">
+                </div>
+                <h2>Welcome to Navratri Store</h2>
+                <p class="login-subtitle">Please sign in to continue your shopping experience</p>
+            </div>
+
+            <form id="login-form" onsubmit="handleLoginSubmit(event)">
+                <div class="form-group">
+                    <label for="customer-name">👤 Full Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="customer-name" placeholder=" " required>
+                        <span class="input-icon">👤</span>
+                        <span class="floating-label">Enter your full name</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="customer-mobile">📱 Mobile Number</label>
+                    <div class="input-wrapper">
+                        <input type="tel" id="customer-mobile" placeholder=" " required pattern="[0-9]{10}" maxlength="10">
+                        <span class="input-icon">📱</span>
+                        <span class="floating-label">10-digit mobile number</span>
+                    </div>
+                </div>
+                <button type="submit" class="login-submit-btn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p>🎊 Celebrate Navratri with authentic handcrafted Dandiya sticks!</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Navratri Store. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
