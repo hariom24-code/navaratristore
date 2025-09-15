@@ -306,21 +306,28 @@ function showUpiPaymentModal(paymentDetails) {
                     <h4>Payment Details:</h4>
                     <p><strong>Amount:</strong> ₹${paymentDetails.amount}</p>
                     <p><strong>Payee:</strong> ${paymentDetails.payeeName}</p>
+                    <p><strong>UPI ID:</strong> <code>${paymentDetails.upiId}</code></p>
                     <p><strong>Note:</strong> ${paymentDetails.transactionNote}</p>
                 </div>
-                <div class="payment-instructions">
-                    <h4>📱 How to Pay:</h4>
-                    <ol>
-                        <li>Click "Open UPI App" to automatically open your UPI app</li>
-                        <li>If that doesn't work, use this UPI ID: <code>dandiyaa@ptyes</code></li>
-                        <li>Enter the amount: ₹${paymentDetails.amount}</li>
-                        <li>Complete the payment in your UPI app</li>
-                        <li>Click "Payment Completed" below</li>
-                    </ol>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0;">
+                    <div class="qr-code-section" style="flex: 1; min-width: 250px;">
+                        <h4>📱 Scan QR Code to Pay:</h4>
+                        <img src="images/upi_payment_qr.png" alt="UPI QR Code" style="max-width: 200px; border: 1px solid #ddd; border-radius: 8px; display: block; margin: 10px auto;">
+                        <p style="text-align: center;">Scan with your UPI app. Enter amount manually.</p>
+                    </div>
+                    <div class="payment-instructions" style="flex: 1; min-width: 250px;">
+                        <h4>📋 Manual Instructions:</h4>
+                        <ol>
+                            <li>Open your UPI app</li>
+                            <li>Scan QR or enter UPI ID: <code>${paymentDetails.upiId}</code></li>
+                            <li>Enter amount: ₹${paymentDetails.amount}</li>
+                            <li>Add note: ${paymentDetails.transactionNote}</li>
+                            <li>Complete payment</li>
+                            <li>Click "Payment Completed" below</li>
+                        </ol>
+                    </div>
                 </div>
                 <div class="payment-actions">
-                    <button onclick="openUpiApp('${paymentDetails.upiUrl}')" class="open-upi-btn">💰 Open UPI App</button>
-                    <button onclick="showUpiId()" class="upi-id-btn">📋 Show UPI ID</button>
                     <button onclick="confirmPayment()" class="confirm-payment-btn">✅ Payment Completed</button>
                 </div>
             </div>
@@ -336,59 +343,6 @@ function closeUpiPaymentModal() {
     const modal = document.getElementById('upi-payment-modal');
     if (modal) {
         modal.remove();
-    }
-}
-
-// Show UPI ID for manual payment
-function showUpiId() {
-    // Create a temporary element to show UPI ID
-    const upiIdElement = document.createElement('div');
-    upiIdElement.innerHTML = `
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 10000; text-align: center;">
-            <h4>📋 UPI ID for Manual Payment</h4>
-            <p style="font-size: 18px; font-weight: bold; color: #ff6600; margin: 15px 0;">dandiyaa@ptyes</p>
-            <p style="margin: 10px 0; color: #666;">Copy this UPI ID and use it in your UPI app</p>
-            <button onclick="navigator.clipboard.writeText('dandiyaa@ptyes').then(() => showToast('UPI ID copied!', 'success'))" style="background: #ff6600; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Copy UPI ID</button>
-            <button onclick="this.parentElement.parentElement.remove()" style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Close</button>
-        </div>
-    `;
-    document.body.appendChild(upiIdElement);
-}
-
-// Open UPI app with error handling
-function openUpiApp(upiUrl) {
-    try {
-        console.log('Opening UPI URL:', upiUrl);
-
-        // For mobile, try to open directly; for desktop, use popup
-        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            // On mobile, create a link and simulate click for deep link
-            const link = document.createElement('a');
-            link.href = upiUrl;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('Redirecting to UPI app...', 'success');
-        } else {
-            // Desktop fallback: popup
-            const upiWindow = window.open(upiUrl, '_blank');
-            if (!upiWindow || upiWindow.closed || typeof upiWindow.closed === 'undefined') {
-                console.warn('UPI popup was blocked or failed to open');
-                showToast('Popup blocked! Click "Show UPI ID" to copy the UPI ID manually.', 'error');
-                return;
-            }
-            showToast('Opening UPI app to complete payment...', 'success');
-        }
-
-        // Fallback timeout for manual instructions
-        setTimeout(() => {
-            showToast('If UPI app didn\'t open, use manual UPI ID below.', 'info');
-        }, 3000);
-
-    } catch (error) {
-        console.error('Failed to open UPI app:', error);
-        showToast('Could not open UPI app automatically. Click "Show UPI ID" to copy manually.', 'error');
     }
 }
 
@@ -441,7 +395,7 @@ async function confirmPayment() {
     }
 }
 
-// Pay with UPI
+// Pay with UPI (renamed for clarity, but keeping function name for HTML compatibility)
 async function payWithRazorpay() {
     if (!validateForm()) return;
 
@@ -456,21 +410,23 @@ async function payWithRazorpay() {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
     try {
-        console.log('Fetching payment details for amount:', subtotal);
+        console.log('Generating UPI payment details for amount:', subtotal);
 
-        // Get UPI payment details from server
-        const paymentResponse = await fetch(`http://localhost:3001/upi-payment-details?amount=${subtotal}`);
+        // Hardcoded UPI config for static hosting (Netlify)
+        const UPI_ID = 'dandiyaa@ptyes';
+        const PAYEE_NAME = 'Navratri Store';
+        const transactionNote = `Navratri Store Purchase - ₹${subtotal}`;
+        const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${subtotal}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
 
-        console.log('Payment response status:', paymentResponse.status);
+        const paymentDetails = {
+            upiId: UPI_ID,
+            payeeName: PAYEE_NAME,
+            amount: subtotal,
+            transactionNote: transactionNote,
+            upiUrl: upiUrl
+        };
 
-        if (!paymentResponse.ok) {
-            const errorText = await paymentResponse.text();
-            console.error('Payment response error:', errorText);
-            throw new Error(`Failed to get payment details: ${paymentResponse.status}`);
-        }
-
-        const paymentDetails = await paymentResponse.json();
-        console.log('Payment details received:', paymentDetails);
+        console.log('Payment details generated:', paymentDetails);
 
         // Show UPI payment modal
         showUpiPaymentModal(paymentDetails);
@@ -554,6 +510,14 @@ function initMobileFeatures() {
         startX = 0;
         startY = 0;
     });
+
+    // Prevent form scroll from triggering modal swipe close
+    const formContainer = document.querySelector('.checkout-form-container');
+    if (formContainer) {
+        ['touchstart', 'touchmove', 'touchend'].forEach(event => {
+            formContainer.addEventListener(event, e => e.stopPropagation(), true);
+        });
+    }
 
     // Add pull-to-refresh for cart
     let pullStart = 0;
@@ -700,5 +664,3 @@ window.closeLoginModal = closeLoginModal;
 window.handleLoginSubmit = handleLoginSubmit;
 window.closeUpiPaymentModal = closeUpiPaymentModal;
 window.confirmPayment = confirmPayment;
-window.openUpiApp = openUpiApp;
-window.showUpiId = showUpiId;
