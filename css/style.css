@@ -1974,6 +1974,30 @@ footer p:first-child::before {
         max-width: 420px;
         padding: 30px 25px;
         margin: 20px auto;
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    #login-modal .login-modal-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        justify-content: flex-start;
+    }
+
+    #login-form {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .login-submit-btn {
+        margin-top: auto;
+        width: 100%;
+        margin-bottom: 20px;
     }
 
     .login-header {
@@ -2122,6 +2146,52 @@ footer p:first-child::before {
         padding: 14px 20px;
         font-size: 16px;
         width: 100%;
+        min-height: 48px;
+    }
+
+    /* Login modal mobile improvements */
+    @media (max-width: 480px) {
+        #login-modal .modal-content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            max-height: none;
+            margin: 0;
+            border-radius: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #login-modal .login-header {
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        #login-form {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .login-submit-btn {
+            position: sticky;
+            bottom: 20px;
+            margin-top: 20px;
+            z-index: 10;
+            width: calc(100% - 40px);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Add bottom padding for keyboard */
+        #login-modal {
+            padding-bottom: env(keyboard-inset-height, 0px);
+        }
     }
 
     /* Toast */

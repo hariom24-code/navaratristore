@@ -267,7 +267,17 @@ function validateForm() {
 
     if (!isValid && firstInvalidInput) {
         firstInvalidInput.focus();
-        firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalidInput.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+        });
+        // Add extra padding for mobile keyboard
+        setTimeout(() => {
+            const rect = firstInvalidInput.getBoundingClientRect();
+            const scrollY = window.scrollY + rect.top - 100; // 100px buffer
+            window.scrollTo({ top: scrollY, behavior: 'smooth' });
+        }, 100);
     }
 
     return isValid;
@@ -450,12 +460,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Mobile-specific enhancements
 function initMobileFeatures() {
-    // Prevent zoom on input focus for iOS
+    // Prevent zoom on input focus for iOS and set input modes
     const inputs = document.querySelectorAll('input, textarea');
     inputs.forEach(input => {
+        // Set inputmode for better mobile keyboard
+        if (input.type === 'tel') {
+            input.setAttribute('inputmode', 'tel');
+        } else if (input.type === 'email') {
+            input.setAttribute('inputmode', 'email');
+        } else if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+            input.setAttribute('inputmode', 'text');
+        }
+
         input.addEventListener('focus', () => {
             if (window.innerWidth < 768) {
-                input.setAttribute('inputmode', 'text');
+                input.style.fontSize = '16px';
+                // Scroll to input with buffer
+                const rect = input.getBoundingClientRect();
+                const scrollY = window.scrollY + rect.top - 100;
+                window.scrollTo({ top: scrollY, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // Keyboard handling for both login and checkout modals
+    let keyboardHeight = 0;
+    if ('visualViewport' in window) {
+        window.visualViewport.addEventListener('resize', () => {
+            const vh = window.visualViewport.height;
+            keyboardHeight = window.innerHeight - vh;
+            const modals = ['login-modal', 'checkout-modal', 'upi-payment-modal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal && modal.style.display === 'block') {
+                    modal.style.paddingBottom = `${Math.max(keyboardHeight, 0)}px`;
+                    document.body.style.paddingBottom = `${Math.max(keyboardHeight, 0)}px`;
+                }
+            });
+            window.visualViewport.scrollTo(0, 0);
+        });
+    }
+
+    // Ensure form submission on enter for mobile (login and checkout)
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.click();
+                } else if (form.id === 'login-form') {
+                    handleLoginSubmit(e);
+                }
             }
         });
     });
@@ -465,51 +522,55 @@ function initMobileFeatures() {
     let startY = 0;
 
     const cart = document.getElementById('cart');
-    cart.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-    });
+    if (cart) {
+        cart.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
 
-    cart.addEventListener('touchend', (e) => {
-        if (!startX || !startY) return;
+        cart.addEventListener('touchend', (e) => {
+            if (!startX || !startY) return;
 
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = startX - endX;
-        const diffY = startY - endY;
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const diffX = startX - endX;
+            const diffY = startY - endY;
 
-        // Swipe left to close cart
-        if (Math.abs(diffX) > Math.abs(diffY) && diffX > 50) {
-            toggleCart();
-        }
+            // Swipe left to close cart
+            if (Math.abs(diffX) > Math.abs(diffY) && diffX > 50) {
+                toggleCart();
+            }
 
-        startX = 0;
-        startY = 0;
-    });
+            startX = 0;
+            startY = 0;
+        });
+    }
 
     // Add swipe to close modal on mobile
     const modal = document.getElementById('checkout-modal');
-    modal.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-    });
+    if (modal) {
+        modal.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
 
-    modal.addEventListener('touchend', (e) => {
-        if (!startX || !startY) return;
+        modal.addEventListener('touchend', (e) => {
+            if (!startX || !startY) return;
 
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = startX - endX;
-        const diffY = startY - endY;
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const diffX = startX - endX;
+            const diffY = startY - endY;
 
-        // Swipe down to close modal
-        if (Math.abs(diffY) > Math.abs(diffX) && diffY > 50) {
-            closeCheckout();
-        }
+            // Swipe down to close modal
+            if (Math.abs(diffY) > Math.abs(diffX) && diffY > 50) {
+                closeCheckout();
+            }
 
-        startX = 0;
-        startY = 0;
-    });
+            startX = 0;
+            startY = 0;
+        });
+    }
 
     // Prevent form scroll from triggering modal swipe close
     const formContainer = document.querySelector('.checkout-form-container');
@@ -523,24 +584,26 @@ function initMobileFeatures() {
     let pullStart = 0;
     const cartItems = document.getElementById('cart-items');
 
-    cartItems.addEventListener('touchstart', (e) => {
-        pullStart = e.touches[0].clientY;
-    });
+    if (cartItems) {
+        cartItems.addEventListener('touchstart', (e) => {
+            pullStart = e.touches[0].clientY;
+        });
 
-    cartItems.addEventListener('touchmove', (e) => {
-        if (pullStart && cartItems.scrollTop === 0) {
-            const pull = e.touches[0].clientY - pullStart;
-            if (pull > 50) {
-                // Add visual feedback for pull-to-refresh
-                cartItems.style.transform = `translateY(${Math.min(pull - 50, 30)}px)`;
+        cartItems.addEventListener('touchmove', (e) => {
+            if (pullStart && cartItems.scrollTop === 0) {
+                const pull = e.touches[0].clientY - pullStart;
+                if (pull > 50) {
+                    // Add visual feedback for pull-to-refresh
+                    cartItems.style.transform = `translateY(${Math.min(pull - 50, 30)}px)`;
+                }
             }
-        }
-    });
+        });
 
-    cartItems.addEventListener('touchend', () => {
-        cartItems.style.transform = '';
-        pullStart = 0;
-    });
+        cartItems.addEventListener('touchend', () => {
+            cartItems.style.transform = '';
+            pullStart = 0;
+        });
+    }
 
     // Improve button tap feedback on mobile
     const buttons = document.querySelectorAll('button');
