@@ -578,6 +578,23 @@ function initMobileFeatures() {
         ['touchstart', 'touchmove', 'touchend'].forEach(event => {
             formContainer.addEventListener(event, e => e.stopPropagation(), true);
         });
+
+        // Prevent pull-to-refresh when scrolling form on mobile
+        let touchStartY = 0;
+        formContainer.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: false });
+
+        formContainer.addEventListener('touchmove', (e) => {
+            if (touchStartY !== 0 && formContainer.scrollTop === 0 &&
+                (e.touches[0].clientY - touchStartY > 10)) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        formContainer.addEventListener('touchend', () => {
+            touchStartY = 0;
+        }, { passive: false });
     }
 
     // Add pull-to-refresh for cart
